@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { anthropic, AI_CONFIG } from '@/lib/anthropic';
+import { getAnthropicClient, AI_CONFIG } from '@/lib/anthropic';
 
 export async function POST(request: NextRequest) {
     try {
@@ -42,6 +42,7 @@ ${targetCompany ? `Zielunternehmen: ${targetCompany}` : ''}
 
 Erstelle ein überzeugendes Anschreiben, das die Stärken des Bewerbers hervorhebt und zeigt, warum er/sie perfekt für die Position geeignet ist.`;
 
+        const anthropic = getAnthropicClient();
         const message = await anthropic.messages.create({
             model: AI_CONFIG.model,
             max_tokens: AI_CONFIG.maxTokens,

@@ -12,6 +12,10 @@ export async function generateWithOpenAI(
     config: any
 ): Promise<TemplateAnalysisResult> {
 
+    if (mimeType === 'application/pdf') {
+        throw new Error('OpenAI Vision does not support PDF files. Please use JPEG, PNG, GIF, or WebP.');
+    }
+
     const startTime = Date.now();
     const base64Image = imageData.toString('base64');
     const prompt = getTemplateAnalysisPrompt(config);

@@ -90,22 +90,27 @@ export class TemplateFileManager {
         let registryContent = await fs.readFile(registryPath, 'utf-8');
 
         // Check if already imported
-        if (registryContent.includes(`import ${componentName}`)) {
+        if (new RegExp(`import\\s+${componentName}\\s+from`).test(registryContent)) {
             console.log(`⚠️ [FileManager] Import ${componentName} already exists in registry.`);
             return;
         }
 
-        // 1. Import hinzufügen
-        const importStatement = `import ${componentName} from './${config.category}/${componentName}';\n`;
-        const lastImportIndex = registryContent.lastIndexOf('import');
-        let insertPos = 0;
-        if (lastImportIndex !== -1) {
-            insertPos = registryContent.indexOf('\n', lastImportIndex) + 1;
+        // 1. Import hinzufügen (Robust Regex)
+        const importStatement = `import ${componentName} from './${config.category}/${componentName}';`;
+        const importRegex = /^import\s+.*?from\s+['"].*?['"];?/gm;
+        let lastImportEnd = 0;
+        let match;
+
+        while ((match = importRegex.exec(registryContent)) !== null) {
+            lastImportEnd = match.index + match[0].length;
         }
+
+        // Insert after last import, or at top if none
+        const insertPos = lastImportEnd > 0 ? registryContent.indexOf('\n', lastImportEnd) + 1 : 0;
 
         registryContent =
             registryContent.slice(0, insertPos) +
-            importStatement +
+            importStatement + '\n' +
             registryContent.slice(insertPos);
 
         // 2. Template-Config zum Array hinzufügen
@@ -141,6 +146,7 @@ export class TemplateFileManager {
         if (!code || code.trim().length === 0) throw new Error('Empty code generated');
         if (!code.includes('export default function')) throw new Error('Invalid React component: Missing export');
         if (!code.includes('ResumeData')) throw new Error('Invalid component: Missing ResumeData type');
+        if (!code.includes('className')) throw new Error('Invalid component: Missing Tailwind CSS classes');
     }
 
     private async rollback(componentName: string, category: string): Promise<void> {

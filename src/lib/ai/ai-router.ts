@@ -15,12 +15,12 @@ export async function generateTemplateCode(
     // 1. Image Preprocessing (Resize & Compress)
     const { buffer: imageData, mimeType } = await preprocessImage(originalBuffer, originalMime);
 
-    // 2. Logic to handle PDF for OpenAI
-    let currentProvider = preferredProvider;
-    if (mimeType === 'application/pdf' && preferredProvider === 'openai') {
-        console.log('⚠️ OpenAI does not support PDF vision directly. Switching to Anthropic.');
-        currentProvider = 'anthropic';
+    // 2. Validate MIME Type (PDF disabled for now)
+    if (mimeType === 'application/pdf') {
+        throw new Error('PDF inputs are currently not supported. Please use JPEG, PNG, or WebP.');
     }
+
+    let currentProvider = preferredProvider;
 
     try {
         // Primärer Provider
@@ -40,17 +40,7 @@ export async function generateTemplateCode(
         // Fallback zum anderen Provider
         const fallbackProvider = currentProvider === 'anthropic' ? 'openai' : 'anthropic';
 
-        // PDF Check für Fallback
-        if (mimeType === 'application/pdf' && fallbackProvider === 'openai') {
-            return {
-                success: false,
-                provider: currentProvider,
-                code: '',
-                executionTime: 0,
-                rawResponse: null,
-                error: `Anthropic failed and OpenAI does not support PDFs. Error: ${primaryError.message}`
-            };
-        }
+
 
         console.log(`🔄 Falling back to ${fallbackProvider}...`);
 

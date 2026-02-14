@@ -12,6 +12,10 @@ export async function generateWithAnthropic(
     config: any
 ): Promise<TemplateAnalysisResult> {
 
+    if (mimeType === 'application/pdf') {
+        throw new Error('Anthropic Vision does not support PDF files. Please use JPEG, PNG, GIF, or WebP.');
+    }
+
     const startTime = Date.now();
     const base64Image = imageData.toString('base64');
     const prompt = getTemplateAnalysisPrompt(config);
@@ -44,14 +48,19 @@ export async function generateWithAnthropic(
 
         const executionTime = Date.now() - startTime;
 
-        // Handle different content types in message.content
-        let generatedCode = '';
-        if (Array.isArray(message.content)) {
-            const textContent = message.content.find(c => c.type === 'text');
-            if (textContent && 'text' in textContent) {
-                generatedCode = textContent.text;
-            }
+        // Defensive parsing
+        if (!message.content || message.content.length === 0) {
+            throw new Error('Empty response from Anthropic API');
         }
+
+        let generatedCode = '';
+        const textContent = message.content.find(c => c.type === 'text');
+
+        if (!textContent || !('text' in textContent)) {
+            throw new Error('Invalid response format: No text content found');
+        }
+
+        generatedCode = textContent.text;
 
         return {
             success: true,

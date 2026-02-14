@@ -7,8 +7,12 @@ import { TemplateDatabaseManager } from '@/lib/database/template-db';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // 2 minutes for full generation
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
+    let uploadConfig: any = null;
+
     try {
         const supabase = createServerClient();
         const { data: { session } } = await supabase.auth.getSession();
@@ -39,7 +43,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing data' }, { status: 400 });
         }
 
+        // Validate File Size
+        if (file.size > MAX_FILE_SIZE) {
+            return NextResponse.json({
+                error: `File too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB`
+            }, { status: 400 });
+        }
+
         const config = JSON.parse(configJson);
+        uploadConfig = config; // Store for potential error logging
+
+        // Sanitize Input
+        config.name = config.name.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+
         const buffer = Buffer.from(await file.arrayBuffer());
 
         // 1. AI Analysis & Generation

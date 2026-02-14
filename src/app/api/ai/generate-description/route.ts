@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { anthropic, AI_CONFIG } from '@/lib/anthropic';
+import { getAnthropicClient, AI_CONFIG } from '@/lib/anthropic';
 
 export async function POST(request: NextRequest) {
     try {
@@ -32,6 +32,7 @@ ${responsibilities ? `Bisherige Beschreibung: ${responsibilities}` : ''}
 
 Generiere 3-5 überzeugende Bullet Points, die die Verantwortlichkeiten und Erfolge beschreiben.`;
 
+        const anthropic = getAnthropicClient();
         const message = await anthropic.messages.create({
             model: AI_CONFIG.model,
             max_tokens: AI_CONFIG.maxTokens,
