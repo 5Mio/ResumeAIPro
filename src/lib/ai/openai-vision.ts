@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { getTemplateAnalysisPrompt } from './prompts/template-analysis-prompt-v2';
+import { getTemplateAnalysisPromptV2 } from './prompts/template-analysis-prompt-v2';
 import { TemplateAnalysisResult } from '@/types/ai-response';
 
 const openai = new OpenAI({
@@ -11,6 +11,7 @@ export async function generateWithOpenAI(
     mimeType: string,
     config: any
 ): Promise<TemplateAnalysisResult> {
+    console.error('🤖 Starting OpenAI generation...');
 
     if (mimeType === 'application/pdf') {
         throw new Error('OpenAI Vision does not support PDF files. Please use JPEG, PNG, GIF, or WebP.');
@@ -18,7 +19,7 @@ export async function generateWithOpenAI(
 
     const startTime = Date.now();
     const base64Image = imageData.toString('base64');
-    const prompt = getTemplateAnalysisPrompt(config);
+    const prompt = getTemplateAnalysisPromptV2(config);
 
     try {
         const response = await openai.chat.completions.create({

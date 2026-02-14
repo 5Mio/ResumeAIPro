@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getTemplateAnalysisPrompt } from './prompts/template-analysis-prompt-v2';
+import { getTemplateAnalysisPromptV2 } from './prompts/template-analysis-prompt-v2';
 import { TemplateAnalysisResult } from '@/types/ai-response';
 
 const anthropic = new Anthropic({
@@ -18,7 +18,7 @@ export async function generateWithAnthropic(
 
     const startTime = Date.now();
     const base64Image = imageData.toString('base64');
-    const prompt = getTemplateAnalysisPrompt(config);
+    const prompt = getTemplateAnalysisPromptV2(config);
 
     try {
         const message = await anthropic.messages.create({

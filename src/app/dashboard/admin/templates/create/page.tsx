@@ -22,7 +22,7 @@ export default function CreateTemplatePage() {
         name: '',
         description: '',
         pro: false,
-        aiProvider: 'anthropic'
+        aiProvider: 'openai'
     });
 
 

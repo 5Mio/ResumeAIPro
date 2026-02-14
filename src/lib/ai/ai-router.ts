@@ -2,13 +2,13 @@ import { generateWithAnthropic } from './anthropic-vision';
 import { generateWithOpenAI } from './openai-vision';
 import { TemplateAnalysisResult } from '@/types/ai-response';
 import { preprocessImage } from '../utils/image-processor';
-import { validateTemplateCode } from './validators/template-validator';
+import { formatValidationResult, validateTemplateCode } from './validators/template-validator';
 
 export async function generateTemplateCode(
     originalBuffer: Buffer,
     originalMime: string,
     config: any,
-    preferredProvider: 'anthropic' | 'openai' = 'anthropic'
+    preferredProvider: 'anthropic' | 'openai' = 'openai'
 ): Promise<TemplateAnalysisResult> {
 
     console.log(`🤖 Starting AI generation with ${preferredProvider}...`);
@@ -38,14 +38,15 @@ export async function generateTemplateCode(
             const validation = validateTemplateCode(result.code);
 
             if (!validation.valid) {
-                console.error('❌ Validation failed (Primary) - Details:', JSON.stringify(validation.errors, null, 2));
-                console.error('📝 Failed Code Snippet (Primary):', result.code.substring(0, 500) + '...');
-                throw new Error(`Code validation failed: ${validation.errors.join(', ')}`);
+                console.error(`❌ ${currentProvider} code validation failed:`, validation.errors);
+                throw new Error(`Code validation failed: ${validation.errors.join(', ')} | Snippet: ${result.code.substring(0, 50)}....`);
             }
 
             if (validation.warnings.length > 0) {
-                console.warn('⚠️ Validation warnings (Primary):', JSON.stringify(validation.warnings, null, 2));
+                console.warn(`⚠️ ${currentProvider} validation warnings:`, validation.warnings);
             }
+
+            console.log(`✅ ${currentProvider} validation passed with score: ${validation.score}/100`);
 
             return result;
         }
@@ -59,7 +60,7 @@ export async function generateTemplateCode(
 
 
 
-        console.log(`🔄 Falling back to ${fallbackProvider}...`);
+        console.error(`🔄 Falling back to ${fallbackProvider}...`);
 
         try {
             let fallbackResult: TemplateAnalysisResult;
@@ -75,13 +76,14 @@ export async function generateTemplateCode(
                 const validation = validateTemplateCode(fallbackResult.code);
 
                 if (!validation.valid) {
-                    console.error('❌ Validation failed (Fallback) - Details:', JSON.stringify(validation.errors, null, 2));
-                    console.error('📝 Failed Code Snippet (Fallback):', fallbackResult.code.substring(0, 500) + '...');
-                    throw new Error(`Code validation failed: ${validation.errors.join(', ')}`);
+                    console.error(`❌ ${fallbackProvider} (fallback) validation failed:`, validation.errors);
+                    throw new Error(`Code validation failed: ${validation.errors.join(', ')} | Snippet: ${fallbackResult.code.substring(0, 50)}....`);
                 }
 
+                console.log(`✅ ${fallbackProvider} (fallback) validation passed with score: ${validation.score}/100`);
+
                 if (validation.warnings.length > 0) {
-                    console.warn('⚠️ Validation warnings (Fallback):', JSON.stringify(validation.warnings, null, 2));
+                    console.warn(`⚠️ ${fallbackProvider} validation warnings:`, validation.warnings);
                 }
 
                 return fallbackResult;
