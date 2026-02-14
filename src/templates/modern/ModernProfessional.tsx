@@ -1,154 +1,257 @@
-import React from 'react';
-import { ResumeData } from '@/types/resume';
+import { TemplateProps } from '../types';
+import { defaultResumeDesign } from '@/types/resume';
 import { Mail, Phone, MapPin, Globe, Briefcase, GraduationCap } from 'lucide-react';
 
-/**
- * Modern Professional Template
- * Two-column layout with colored sidebar
- * ✅ FIXED: Aligned with actual ResumeData schema
- */
+export default function ModernProfessional({ data }: TemplateProps) {
+  // 1. Design-Properties mit Fallback extrahieren
+  const design = data.design || defaultResumeDesign;
+  const { colors, typography, layout } = design;
 
-export default function ModernProfessional({ data }: { data: ResumeData }) {
+  // 2. Häufig verwendete Styles berechnen
+  const containerStyle = {
+    width: '794px',
+    minHeight: '1123px',
+    backgroundColor: colors.background,
+    color: colors.text,
+    fontFamily: typography.fontFamily.body,
+    fontSize: `${typography.fontSize.body}pt`,
+    lineHeight: typography.lineHeight,
+    padding: `${layout.margins.top}pt ${layout.margins.right}pt ${layout.margins.bottom}pt ${layout.margins.left}pt`
+  };
+
+  const sidebarStyle = {
+    width: '256px',
+    background: `linear-gradient(to bottom, ${colors.primary}, ${colors.accent})`,
+    color: colors.background,
+    padding: '32px 24px'
+  };
+
+  const mainContentStyle = {
+    flex: 1,
+    padding: '32px 40px'
+  };
+
+  const h1Style = {
+    fontSize: `${typography.fontSize.h1}pt`,
+    fontFamily: typography.fontFamily.heading,
+    fontWeight: 'bold',
+    color: colors.background,
+    marginBottom: `${layout.spacing.section}pt`
+  };
+
+  const h2Style = {
+    fontSize: `${typography.fontSize.h2}pt`,
+    fontFamily: typography.fontFamily.heading,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: `${layout.spacing.item}pt`,
+    borderBottom: `2px solid ${colors.accent}`,
+    paddingBottom: '4pt'
+  };
+
+  const h3Style = {
+    fontSize: `${typography.fontSize.h3}pt`,
+    fontFamily: typography.fontFamily.heading,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: `${layout.spacing.paragraph}pt`
+  };
+
+  const smallTextStyle = {
+    fontSize: `${typography.fontSize.small}pt`,
+    color: colors.text,
+    opacity: 0.7
+  };
+
   return (
-    <div className="w-[794px] h-[1123px] bg-white flex print:shadow-none">
-      {/* Left Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-blue-600 to-blue-700 p-6 text-white flex flex-col">
-        {/* Contact Info */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-1">{data.personal.firstName}</h1>
-          <h1 className="text-2xl font-bold mb-4">{data.personal.lastName}</h1>
+    <div style={containerStyle} className="flex">
+      {/* SIDEBAR */}
+      <aside style={sidebarStyle}>
+        {/* Header */}
+        <div style={{ marginBottom: `${layout.spacing.section}pt` }}>
+          <h1 style={h1Style}>
+            {data.personal.firstName}
+            <br />
+            {data.personal.lastName}
+          </h1>
           {data.personal.title && (
-            <p className="text-sm text-blue-100 mb-3">{data.personal.title}</p>
+            <p style={{
+              fontSize: `${typography.fontSize.h3}pt`,
+              marginBottom: `${layout.spacing.item}pt`,
+              opacity: 0.9
+            }}>
+              {data.personal.title}
+            </p>
           )}
+        </div>
 
-          <div className="space-y-2 text-sm">
-            {data.personal.email && (
-              <div className="flex items-center space-x-2">
-                <Mail className="w-4 h-4" />
-                <span className="truncate">{data.personal.email}</span>
-              </div>
-            )}
-            {data.personal.phone && (
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4" />
-                <span>{data.personal.phone}</span>
-              </div>
-            )}
-            {data.personal.location && (
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span>{data.personal.location}</span>
-              </div>
-            )}
-            {data.personal.website && (
-              <div className="flex items-center space-x-2">
-                <Globe className="w-4 h-4" />
-                <span className="truncate">{data.personal.website}</span>
-              </div>
-            )}
-          </div>
+        {/* Contact */}
+        <div style={{
+          marginBottom: `${layout.spacing.section}pt`,
+          fontSize: `${typography.fontSize.small}pt`
+        }}>
+          {data.personal.email && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <Mail size={12} />
+              <span>{data.personal.email}</span>
+            </div>
+          )}
+          {data.personal.phone && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <Phone size={12} />
+              <span>{data.personal.phone}</span>
+            </div>
+          )}
+          {data.personal.location && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={12} />
+              <span>{data.personal.location}</span>
+            </div>
+          )}
+          {data.personal.website && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+              <Globe size={12} />
+              <span>{data.personal.website}</span>
+            </div>
+          )}
         </div>
 
         {/* Skills */}
-        {data.skills && data.skills.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-bold mb-3 pb-2 border-b border-blue-400">
-              Skills
-            </h2>
-            <div className="flex flex-wrap gap-2">
+        {data.skills.length > 0 && (
+          <div style={{ marginBottom: `${layout.spacing.section}pt` }}>
+            <h3 style={{
+              fontSize: `${typography.fontSize.h3}pt`,
+              fontWeight: 'bold',
+              marginBottom: `${layout.spacing.item}pt`,
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              Fähigkeiten
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {data.skills.map((skill, index) => (
-                <div
+                <span
                   key={index}
-                  className="px-3 py-1 bg-blue-500 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: colors.background,
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: `${typography.fontSize.small}pt`,
+                    fontWeight: '500'
+                  }}
                 >
                   {skill}
-                </div>
+                </span>
               ))}
             </div>
           </div>
         )}
 
         {/* Languages */}
-        {data.languages && data.languages.length > 0 && (
+        {data.languages.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold mb-3 pb-2 border-b border-blue-400">
+            <h3 style={{
+              fontSize: `${typography.fontSize.h3}pt`,
+              fontWeight: 'bold',
+              marginBottom: `${layout.spacing.item}pt`,
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
               Sprachen
-            </h2>
-            <div className="space-y-2 text-sm">
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {data.languages.map((lang, index) => (
-                <div key={index}>
-                  <span className="font-medium">{lang.language}</span>
-                  <div className="text-xs text-blue-200">{lang.level}</div>
+                <div key={index} style={{ fontSize: `${typography.fontSize.small}pt` }}>
+                  <div style={{ fontWeight: '600' }}>{lang.language}</div>
+                  <div style={{ opacity: 0.8 }}>{lang.level}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </aside>
 
-      {/* Right Content */}
-      <div className="flex-1 p-8">
-        {/* Summary */}
+      {/* MAIN CONTENT */}
+      <main style={mainContentStyle}>
+        {/* Profile */}
         {data.personal.summary && (
-          <div className="mb-6">
-            <p className="text-sm text-gray-700 leading-relaxed">{data.personal.summary}</p>
-          </div>
+          <section style={{ marginBottom: `${layout.spacing.section}pt` }}>
+            <h2 style={h2Style}>Profil</h2>
+            <p style={{
+              whiteSpace: 'pre-line',
+              lineHeight: typography.lineHeight
+            }}>
+              {data.personal.summary}
+            </p>
+          </section>
         )}
 
         {/* Experience */}
-        {data.experience && data.experience.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 mb-4 text-blue-700">
-              <Briefcase className="w-5 h-5" />
-              <h2 className="text-xl font-bold">Berufserfahrung</h2>
-            </div>
-
-            <div className="space-y-4">
+        {data.experience.length > 0 && (
+          <section style={{ marginBottom: `${layout.spacing.section}pt` }}>
+            <h2 style={{ ...h2Style, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Briefcase size={20} />
+              Berufserfahrung
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: `${layout.spacing.item}pt` }}>
               {data.experience.map((exp) => (
-                <div key={exp.id} className="relative pl-4 border-l-2 border-blue-200">
-                  <div className="absolute w-3 h-3 bg-blue-600 rounded-full -left-[7px] top-1" />
-
-                  <div className="font-semibold text-gray-900">{exp.title}</div>
-                  <div className="text-sm font-medium text-blue-600">{exp.company}</div>
-                  <div className="text-xs text-gray-500 mb-2">
-                    {exp.startDate} - {exp.endDate || 'Heute'}
+                <div key={exp.id}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4pt' }}>
+                    <h3 style={h3Style}>{exp.title}</h3>
+                    <span style={smallTextStyle}>
+                      {exp.startDate} - {exp.endDate || 'Heute'}
+                    </span>
                   </div>
-                  {exp.description && (
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {exp.description}
-                    </p>
-                  )}
+                  <div style={{
+                    fontWeight: '600',
+                    color: colors.primary,
+                    marginBottom: '4pt',
+                    fontSize: `${typography.fontSize.body}pt`
+                  }}>
+                    {exp.company}
+                  </div>
+                  <p style={{
+                    whiteSpace: 'pre-line',
+                    lineHeight: typography.lineHeight
+                  }}>
+                    {exp.description}
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {/* Education */}
-        {data.education && data.education.length > 0 && (
-          <div>
-            <div className="flex items-center space-x-2 mb-4 text-blue-700">
-              <GraduationCap className="w-5 h-5" />
-              <h2 className="text-xl font-bold">Ausbildung</h2>
-            </div>
-
-            <div className="space-y-4">
+        {data.education.length > 0 && (
+          <section>
+            <h2 style={{ ...h2Style, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <GraduationCap size={20} />
+              Ausbildung
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: `${layout.spacing.item}pt` }}>
               {data.education.map((edu) => (
                 <div key={edu.id}>
-                  <div className="font-semibold text-gray-900">
-                    {edu.degree}
-                    {edu.field && ` in ${edu.field}`}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4pt' }}>
+                    <h3 style={h3Style}>{edu.degree} in {edu.field}</h3>
+                    <span style={smallTextStyle}>
+                      {edu.startDate} - {edu.endDate}
+                    </span>
                   </div>
-                  <div className="text-sm font-medium text-blue-600">{edu.school}</div>
-                  <div className="text-xs text-gray-500">
-                    {edu.startDate} - {edu.endDate || 'Heute'}
+                  <div style={{
+                    color: colors.text,
+                    opacity: 0.8,
+                    fontSize: `${typography.fontSize.body}pt`
+                  }}>
+                    {edu.school}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { ResumeData } from '@/types/resume';
-import Modern from './modern/Modern';
-import BlueOcean from './creative/BlueOcean';
-import DoubleInn from './professional/DoubleInn';
+import ModernProfessional from './modern/ModernProfessional';
+import CreativeBold from './creative/CreativeBold';
+import ClassicMinimal from './classic/ClassicMinimal';
 
 export interface TemplateConfig {
     id: string;
@@ -22,7 +22,7 @@ export const templates: TemplateConfig[] = [
         description: 'AI-generiertes Template',
         category: 'professional',
         preview: '/templates/previews/double-inn.jpg',
-        component: DoubleInn,
+        component: ClassicMinimal,
         pro: false,
         features: ['AI-generiert', 'Vollständig editierbar'],
         bestFor: ['Professionals', 'Karrierewechsler']
@@ -33,7 +33,7 @@ export const templates: TemplateConfig[] = [
         description: 'AI-generiertes Template',
         category: 'creative',
         preview: '/templates/previews/blue-ocean.jpg',
-        component: BlueOcean,
+        component: CreativeBold,
         pro: true,
         features: ['AI-generiert', 'Vollständig editierbar'],
         bestFor: ['Schüler', 'Studenten']
@@ -44,8 +44,9 @@ export const templates: TemplateConfig[] = [
         description: 'AI-generiertes Template',
         category: 'modern',
         preview: '/templates/previews/modern.jpg',
-        component: Modern,
+        component: ModernProfessional,
         pro: true,
         features: ['AI-generiert', 'Vollständig editierbar'],
         bestFor: ['Professionals', 'Karrierewechsler']
-    },];
+    },
+];

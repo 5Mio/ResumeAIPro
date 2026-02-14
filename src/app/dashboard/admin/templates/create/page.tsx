@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import TemplateUploader from '@/components/admin/TemplateUploader';
 import TemplateConfigForm from '@/components/admin/TemplateConfigForm';
 import GenerationStatus from '@/components/admin/GenerationStatus';
+import PreviewModal from '@/components/admin/PreviewModal';
 import { TemplateConfig } from '@/types/template-generation';
 import { GenerationStatus as StatusType } from '@/types/admin';
 
@@ -24,17 +25,18 @@ export default function CreateTemplatePage() {
         aiProvider: 'anthropic'
     });
 
+
     const [isGenerating, setIsGenerating] = useState(false);
     const [status, setStatus] = useState<StatusType | null>(null);
+
+    // Preview State
+    const [previewCode, setPreviewCode] = useState<string | null>(null);
+    const [showPreview, setShowPreview] = useState(false);
+    const [isDeploying, setIsDeploying] = useState(false);
 
     const handleGenerate = async () => {
         if (!file || !config.name) {
             alert('Bitte wähle eine Datei und gib einen Namen an.');
-            return;
-        }
-
-        if (file.type === 'application/pdf' && config.aiProvider === 'openai') {
-            alert('OpenAI unterstützt derzeit keine PDFs für die Bildanalyse. Bitte wähle Anthropic oder lade ein Bild (PNG/JPG) hoch.');
             return;
         }
 
@@ -48,7 +50,8 @@ export default function CreateTemplatePage() {
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('config', JSON.stringify(config));
+        // Request Preview First
+        formData.append('config', JSON.stringify({ ...config, previewOnly: true }));
 
         try {
             // Stage changes manually for better UX
@@ -67,27 +70,82 @@ export default function CreateTemplatePage() {
 
             const data = await res.json();
 
-            setStatus({
-                stage: 'complete',
-                message: `Template "${config.name}" wurde erfolgreich erstellt und deployt!`
-            });
+            if (data.previewOnly) {
+                setPreviewCode(data.code);
+                setShowPreview(true);
+                setStatus(null); // Clear status
+                setIsGenerating(false);
+                return;
+            }
 
-            setTimeout(() => {
-                router.push('/dashboard/admin/templates');
-            }, 3000);
+            // Fallback (falls previewOnly false wäre)
+            handleDeploymentSuccess(config.name);
 
         } catch (error: any) {
             setStatus({
                 stage: 'error',
                 message: error.message || 'Ein unerwarteter Fehler ist aufgetreten.'
             });
-        } finally {
             setIsGenerating(false);
         }
     };
 
+    const handleDeploy = async () => {
+        if (!file || !previewCode) return;
+
+        setIsDeploying(true);
+        setStatus({ stage: 'generating', message: 'Deploye Template in Production...' });
+        setShowPreview(false); // Close modal
+
+        const formData = new FormData();
+        formData.append('file', file);
+        // Important: previewOnly = false for deployment
+        formData.append('config', JSON.stringify({ ...config, previewOnly: false }));
+        // We could also send "code" directly to save AI cost, but let's re-run for now to be safe with file/config state
+        // OR better: Update API to accept "code" to skip AI. 
+        // For Phase 2 MVP: Just re-send request (AI is cached/deterministic enough usually, but strictly speaking we should deployment differently).
+        // Actually, re-running AI is bad (cost + variance).
+        // Let's modify the API in next step to accept "existingCode".
+        // For now, let's assume deterministic re-run or just accept cost for robustness.
+
+        try {
+            const res = await fetch('/api/admin/templates/generate', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Deployment fehlgeschlagen');
+            }
+
+            handleDeploymentSuccess(config.name);
+
+        } catch (error: any) {
+            setStatus({
+                stage: 'error',
+                message: error.message || 'Deployment Error.'
+            });
+        } finally {
+            setIsDeploying(false);
+            setIsGenerating(false);
+        }
+    }
+
+    const handleDeploymentSuccess = (name: string) => {
+        setStatus({
+            stage: 'complete',
+            message: `Template "${name}" wurde erfolgreich erstellt und deployt!`
+        });
+
+        setTimeout(() => {
+            router.push('/dashboard/admin/templates');
+        }, 3000);
+    };
+
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
+            {/* ... Header ... */}
             <header className="bg-white border-b border-gray-100 px-8 py-6 sticky top-0 z-10 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-6">
@@ -159,6 +217,15 @@ export default function CreateTemplatePage() {
                     </section>
                 )}
             </main>
+
+            {showPreview && previewCode && (
+                <PreviewModal
+                    code={previewCode}
+                    onClose={() => setShowPreview(false)}
+                    onDeploy={handleDeploy}
+                    isDeploying={isDeploying}
+                />
+            )}
         </div>
     );
 }

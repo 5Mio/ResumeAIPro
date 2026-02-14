@@ -1,150 +1,205 @@
-import React from 'react';
-import { ResumeData } from '@/types/resume';
+import { TemplateProps } from '../types';
+import { defaultResumeDesign } from '@/types/resume';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
-/**
- * Classic Minimal Template
- * Conservative single-column layout
- * ✅ FIXED: Aligned with actual ResumeData schema
- */
+export default function ClassicMinimal({ data }: TemplateProps) {
+  const design = data.design || defaultResumeDesign;
+  const { colors, typography, layout } = design;
 
-export default function ClassicMinimal({ data }: { data: ResumeData }) {
+  const containerStyle = {
+    width: '794px',
+    minHeight: '1123px',
+    backgroundColor: colors.background,
+    color: colors.text,
+    fontFamily: typography.fontFamily.body,
+    fontSize: `${typography.fontSize.body}pt`,
+    lineHeight: typography.lineHeight,
+    padding: `${layout.margins.top}pt ${layout.margins.right}pt ${layout.margins.bottom}pt ${layout.margins.left}pt`
+  };
+
+  const h1Style = {
+    fontSize: `${typography.fontSize.h1}pt`,
+    fontFamily: typography.fontFamily.heading,
+    fontWeight: 'bold',
+    color: colors.primary,
+    textAlign: 'center' as const,
+    marginBottom: `${layout.spacing.item}pt`
+  };
+
+  const h2Style = {
+    fontSize: `${typography.fontSize.h2}pt`,
+    fontFamily: typography.fontFamily.heading,
+    fontWeight: 'bold',
+    color: colors.primary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '2px',
+    borderBottom: `1px solid ${colors.primary}`,
+    paddingBottom: '4pt',
+    marginTop: `${layout.spacing.section}pt`,
+    marginBottom: `${layout.spacing.item}pt`
+  };
+
+  const h3Style = {
+    fontSize: `${typography.fontSize.h3}pt`,
+    fontFamily: typography.fontFamily.heading,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: `${layout.spacing.paragraph}pt`
+  };
+
+  const smallTextStyle = {
+    fontSize: `${typography.fontSize.small}pt`,
+    color: colors.text,
+    opacity: 0.6
+  };
+
   return (
-    <div className="w-[794px] h-[1123px] bg-white p-12 print:p-8">
+    <div style={containerStyle}>
       {/* Header */}
-      <div className="text-center mb-8 pb-6 border-b-2 border-gray-800">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+      <header style={{ textAlign: 'center', marginBottom: `${layout.spacing.section}pt` }}>
+        <h1 style={h1Style}>
           {data.personal.firstName} {data.personal.lastName}
         </h1>
         {data.personal.title && (
-          <div className="text-lg text-gray-700 mb-3">{data.personal.title}</div>
+          <p style={{
+            fontSize: `${typography.fontSize.h3}pt`,
+            color: colors.text,
+            opacity: 0.7,
+            marginBottom: '12pt'
+          }}>
+            {data.personal.title}
+          </p>
         )}
-
-        <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
-          {data.personal.email && <span>{data.personal.email}</span>}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '16px',
+          flexWrap: 'wrap',
+          fontSize: `${typography.fontSize.small}pt`
+        }}>
+          {data.personal.email && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Mail size={10} />
+              <span>{data.personal.email}</span>
+            </div>
+          )}
           {data.personal.phone && (
-            <>
-              <span>•</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Phone size={10} />
               <span>{data.personal.phone}</span>
-            </>
+            </div>
           )}
           {data.personal.location && (
-            <>
-              <span>•</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <MapPin size={10} />
               <span>{data.personal.location}</span>
-            </>
+            </div>
           )}
         </div>
+      </header>
 
-        {data.personal.website && (
-          <div className="text-sm text-gray-600 mt-2">{data.personal.website}</div>
-        )}
-      </div>
-
-      {/* Summary */}
+      {/* Profile */}
       {data.personal.summary && (
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">
-            Profil
-          </h2>
-          <p className="text-sm text-gray-700 leading-relaxed">{data.personal.summary}</p>
-        </div>
+        <section>
+          <h2 style={h2Style}>Profil</h2>
+          <p style={{ whiteSpace: 'pre-line', lineHeight: typography.lineHeight }}>
+            {data.personal.summary}
+          </p>
+        </section>
       )}
 
       {/* Experience */}
-      {data.experience && data.experience.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-300 pb-1">
-            Berufserfahrung
-          </h2>
-
-          <div className="space-y-4">
+      {data.experience.length > 0 && (
+        <section>
+          <h2 style={h2Style}>Berufserfahrung</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: `${layout.spacing.item}pt` }}>
             {data.experience.map((exp) => (
               <div key={exp.id}>
-                <div className="flex justify-between items-baseline mb-1">
-                  <div className="font-semibold text-gray-900">{exp.title}</div>
-                  <div className="text-xs text-gray-500">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4pt' }}>
+                  <h3 style={h3Style}>{exp.title}</h3>
+                  <span style={smallTextStyle}>
                     {exp.startDate} - {exp.endDate || 'Heute'}
-                  </div>
+                  </span>
                 </div>
-                <div className="text-sm font-medium text-gray-700 mb-1">
+                <div style={{ fontWeight: '600', marginBottom: '4pt' }}>
                   {exp.company}
                 </div>
-                {exp.description && (
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {exp.description}
-                  </p>
-                )}
+                <p style={{ whiteSpace: 'pre-line', lineHeight: typography.lineHeight }}>
+                  {exp.description}
+                </p>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Education */}
-      {data.education && data.education.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-300 pb-1">
-            Ausbildung
-          </h2>
-
-          <div className="space-y-3">
+      {data.education.length > 0 && (
+        <section>
+          <h2 style={h2Style}>Ausbildung</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: `${layout.spacing.item}pt` }}>
             {data.education.map((edu) => (
               <div key={edu.id}>
-                <div className="flex justify-between items-baseline mb-1">
-                  <div className="font-semibold text-gray-900">
-                    {edu.degree}
-                    {edu.field && ` in ${edu.field}`}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {edu.startDate} - {edu.endDate || 'Heute'}
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4pt' }}>
+                  <h3 style={h3Style}>{edu.degree} in {edu.field}</h3>
+                  <span style={smallTextStyle}>
+                    {edu.startDate} - {edu.endDate}
+                  </span>
                 </div>
-                <div className="text-sm text-gray-700">{edu.school}</div>
+                <div style={{ color: colors.text, opacity: 0.7 }}>
+                  {edu.school}
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Skills & Languages Grid */}
-      {((data.skills && data.skills.length > 0) || (data.languages && data.languages.length > 0)) && (
-        <div className="grid grid-cols-2 gap-6">
-          {/* Skills */}
-          {data.skills && data.skills.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-300 pb-1">
-                Fähigkeiten
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {data.skills.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="text-sm text-gray-700 px-2 py-1 bg-gray-100 rounded"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+      {/* Skills & Languages */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: `${layout.spacing.section}pt`,
+        marginTop: `${layout.spacing.section}pt`
+      }}>
+        {/* Skills */}
+        {data.skills.length > 0 && (
+          <section>
+            <h2 style={{ ...h2Style, marginTop: 0 }}>Fähigkeiten</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {data.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  style={{
+                    padding: '4px 12px',
+                    border: `1px solid ${colors.primary}`,
+                    borderRadius: '4px',
+                    fontSize: `${typography.fontSize.small}pt`,
+                    color: colors.primary
+                  }}
+                >
+                  {skill}
+                </span>
+              ))}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Languages */}
-          {data.languages && data.languages.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-300 pb-1">
-                Sprachen
-              </h2>
-              <div className="space-y-1 text-sm text-gray-700">
-                {data.languages.map((lang, index) => (
-                  <div key={index}>
-                    {lang.language} • {lang.level}
-                  </div>
-                ))}
-              </div>
+        {/* Languages */}
+        {data.languages.length > 0 && (
+          <section>
+            <h2 style={{ ...h2Style, marginTop: 0 }}>Sprachen</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {data.languages.map((lang, index) => (
+                <div key={index} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: '600' }}>{lang.language}</span>
+                  <span style={smallTextStyle}>{lang.level}</span>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }

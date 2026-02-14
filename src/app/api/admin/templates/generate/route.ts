@@ -13,6 +13,42 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
     let uploadConfig: any = null;
 
+    // Admin check logic moved inside try, but we need to parse FormData safely.
+    // However, NextRequest.formData() can fail if body is invalid.
+    // We will follow the user's specific request to parse config early.
+
+    let config: any = null;
+    let file: File | null = null;
+    let buffer: Buffer | null = null;
+
+    // 1. Parse FormData first (as requested)
+    try {
+        const formData = await request.formData();
+        file = formData.get('file') as File;
+        const configJson = formData.get('config') as string;
+
+        if (!file || !configJson) {
+            return NextResponse.json({ error: 'Missing data' }, { status: 400 });
+        }
+
+        config = JSON.parse(configJson);
+        uploadConfig = config;
+
+        // Sanitize Input
+        config.name = config.name.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+
+        buffer = Buffer.from(await file.arrayBuffer());
+
+    } catch (e: any) {
+        console.error('❌ Parse Error:', e);
+        return NextResponse.json({ error: 'Invalid FormData or JSON' }, { status: 400 });
+    }
+
+    if (!config || typeof config.name !== 'string') {
+        console.error('❌ Invalid Config:', config);
+        return NextResponse.json({ error: 'Invalid configuration: Name is required' }, { status: 400 });
+    }
+
     try {
         const supabase = createServerClient();
         const { data: { session } } = await supabase.auth.getSession();
@@ -35,12 +71,8 @@ export async function POST(request: NextRequest) {
             }, { status: 403 });
         }
 
-        const formData = await request.formData();
-        const file = formData.get('file') as File;
-        const configJson = formData.get('config') as string;
-
-        if (!file || !configJson) {
-            return NextResponse.json({ error: 'Missing data' }, { status: 400 });
+        if (!file) {
+            throw new Error('File object is null after FormData parsing');
         }
 
         // Validate File Size
@@ -50,22 +82,31 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        const config = JSON.parse(configJson);
-        uploadConfig = config; // Store for potential error logging
-
-        // Sanitize Input
-        config.name = config.name.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
-
-        const buffer = Buffer.from(await file.arrayBuffer());
-
         // 1. AI Analysis & Generation
         console.log('🤖 Starting AI generation...');
+        if (!buffer) {
+            throw new Error('Buffer is null');
+        }
+
         const aiResult = await generateTemplateCode(buffer, file.type, config);
+
         if (!aiResult.success) {
             console.error('❌ AI Generation failed:', aiResult.error);
+            // Check if error is validation related to customize status code? 
+            // For now keep it as 500 or let it fall to catch block
             throw new Error(aiResult.error || 'AI Generation failed');
         }
-        console.log('✅ AI generation complete');
+        console.log('✅ AI generation complete, code length:', aiResult.code?.length);
+
+        if (config.previewOnly) {
+            console.log('👀 Preview mode: Returning code without deployment');
+            return NextResponse.json({
+                success: true,
+                previewOnly: true,
+                code: aiResult.code,
+                executionTime: aiResult.executionTime
+            });
+        }
 
         // 2. File Deployment
         console.log('📂 Deploying files...');

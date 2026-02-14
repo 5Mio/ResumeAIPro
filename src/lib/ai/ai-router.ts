@@ -2,6 +2,7 @@ import { generateWithAnthropic } from './anthropic-vision';
 import { generateWithOpenAI } from './openai-vision';
 import { TemplateAnalysisResult } from '@/types/ai-response';
 import { preprocessImage } from '../utils/image-processor';
+import { validateTemplateCode } from './validators/template-validator';
 
 export async function generateTemplateCode(
     originalBuffer: Buffer,
@@ -31,7 +32,23 @@ export async function generateTemplateCode(
             result = await generateWithOpenAI(imageData, mimeType, config);
         }
 
-        if (result.success) return result;
+
+        if (result.success) {
+            // ✅ NEU: Validierung vor Return
+            const validation = validateTemplateCode(result.code);
+
+            if (!validation.valid) {
+                console.error('❌ Validation failed (Primary) - Details:', JSON.stringify(validation.errors, null, 2));
+                console.error('📝 Failed Code Snippet (Primary):', result.code.substring(0, 500) + '...');
+                throw new Error(`Code validation failed: ${validation.errors.join(', ')}`);
+            }
+
+            if (validation.warnings.length > 0) {
+                console.warn('⚠️ Validation warnings (Primary):', JSON.stringify(validation.warnings, null, 2));
+            }
+
+            return result;
+        }
         throw new Error(result.error || 'Primary provider failed');
 
     } catch (primaryError: any) {
@@ -52,7 +69,23 @@ export async function generateTemplateCode(
                 fallbackResult = await generateWithOpenAI(imageData, mimeType, config);
             }
 
-            if (fallbackResult.success) return fallbackResult;
+
+            if (fallbackResult.success) {
+                // ✅ NEU: Validierung auch für Fallback
+                const validation = validateTemplateCode(fallbackResult.code);
+
+                if (!validation.valid) {
+                    console.error('❌ Validation failed (Fallback) - Details:', JSON.stringify(validation.errors, null, 2));
+                    console.error('📝 Failed Code Snippet (Fallback):', fallbackResult.code.substring(0, 500) + '...');
+                    throw new Error(`Code validation failed: ${validation.errors.join(', ')}`);
+                }
+
+                if (validation.warnings.length > 0) {
+                    console.warn('⚠️ Validation warnings (Fallback):', JSON.stringify(validation.warnings, null, 2));
+                }
+
+                return fallbackResult;
+            }
             throw new Error(fallbackResult.error || 'Fallback provider failed');
 
         } catch (fallbackError: any) {

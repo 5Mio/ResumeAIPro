@@ -5,6 +5,12 @@ export interface TemplateConfig {
     description: string;
     pro: boolean;
     aiProvider: 'anthropic' | 'openai';
+    features?: {
+        supportsPhoto: boolean;
+        supportsSkillLevels: boolean;
+        supportsSocialMedia: boolean;
+        supportsInterests: boolean;
+    };
 }
 
 export interface TemplateDeploymentResult {
